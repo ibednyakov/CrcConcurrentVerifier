@@ -35,7 +35,9 @@ Dispatcher::Dispatcher(std::shared_ptr<CRCVerifier::InputParameterReader>& param
 }
 
 Dispatcher::~Dispatcher()
-{}
+{
+	finalizeAll(); //ensures everything completed!..
+}
 
 void Dispatcher::dispatchProcessing()
 {
@@ -44,13 +46,11 @@ void Dispatcher::dispatchProcessing()
 		_threadPool.push_back(
 				std::make_shared<WorkerContainer>(_parameters->getBlockSize(), this, _parameters->getWorkersCount()));
 	}
-	else 
-		while(!_workersCount)
+	else do
 		{
-			std::this_thread::yield();
-			// Another possible solution - to use cond var here...
-			// But it has other disadvantages!
-		}
+			std::unique_lock<std::mutex> uniqueLock(_mutex);
+			_waiter.wait(uniqueLock);
+		} while(!_workersCount);
 
 	for (auto& threadInstance : _threadPool)
 	{
@@ -67,6 +67,7 @@ void Dispatcher::dispatchProcessing()
 void Dispatcher::completed(bool completed)
 {
 	++_workersCount; // atomic operation!
+	_waiter.notify_one();
 }
 
 }

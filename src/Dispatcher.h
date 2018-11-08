@@ -41,6 +41,8 @@ private:
 	std::shared_ptr<CRCVerifier::InputParameterReader> _parameters;
 	std::atomic<unsigned>                              _workersCount;
 	std::vector<std::shared_ptr<WorkerContainer>>      _threadPool;
+	std::mutex                                         _mutex;
+	std::condition_variable                            _waiter;
 
 	explicit Dispatcher(std::shared_ptr<CRCVerifier::InputParameterReader>& parameters);
 

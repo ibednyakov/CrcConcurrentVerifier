@@ -36,9 +36,11 @@ void WorkerContainer::execute()
 
 void WorkerContainer::finalize()
 {
-	bool result = true;
-	if (_busyFlag.compare_exchange_strong(result, false))
-	{}
+	// we should wait until the contained detached thread completed!..
+	while (_busyFlag)
+	{
+		std::this_thread::yield();
+	}
 }
 
 bool WorkerContainer::startExecution()
